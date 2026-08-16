@@ -1,8 +1,6 @@
 fastlane documentation
 ----
 
-> 完整中文指南（本机打包 / 装到 iPhone / TestFlight 升级）见 **docs/fastlane-guide.md**
-
 # Installation
 
 Make sure you have the latest version of the Xcode command line tools installed:
@@ -40,6 +38,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 ```
 
 构建并编译测试（CI 用；模拟器，无签名）
+
+### ios beta
+
+```sh
+[bundle exec] fastlane ios beta
+```
+
+上传 TestFlight（需先配置 fastlane/.env：API key + match 证书仓库 + match 密码）
 
 ----
 

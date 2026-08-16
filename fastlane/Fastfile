@@ -2,6 +2,7 @@
 # CalmTrack 自动打包与分发
 #   ios build      —— CI 模拟器构建验证（无签名）
 #   ios archive    —— 本机真机 Release + Development 签名 ipa（Automatic signing）
+#   ios package    —— 脚本打包：--env development|appstore，--version 可选，build 号自动递增（scripts/package.sh 调用）
 #   ios beta       —— TestFlight 上传（需先在 fastlane/.env 配置 API key 与 match，见 .env.example）
 #
 # App Store Connect API Key：
@@ -50,6 +51,53 @@ platform :ios do
       code_signing: false,
       build_for_testing: true
     )
+  end
+
+  desc "打包：env=development|appstore（签名环境）；version 可选（覆盖 MARKETING_VERSION，本次生效）；build 号自动递增并写回工程"
+  lane :package do |options|
+    env = (options[:env] || "development").to_s
+    version = options[:version]&.to_s
+    unless %w[development appstore].include?(env)
+      UI.user_error!("env 必须是 development 或 appstore，收到: #{env}")
+    end
+
+    build_number = increment_build_number
+    suffix = [env, version, build_number].compact.join("-")
+    xcargs = version ? "MARKETING_VERSION=#{version}" : nil
+
+    if env == "appstore"
+      app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] || "REPLACE_WITH_KEY_ID",
+        issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] || "REPLACE_WITH_ISSUER_ID",
+        key_filepath: ENV["APP_STORE_CONNECT_API_KEY_FILEPATH"] || "REPLACE_WITH_KEY_FILEPATH",
+        in_house: false
+      )
+      match(type: "appstore", readonly: true)
+      build_app(
+        scheme: "CalmTrack",
+        export_method: "app-store-connect",
+        output_directory: "build/ipa",
+        output_name: "CalmTrack-#{suffix}",
+        xcargs: xcargs
+      )
+    else
+      gym(
+        scheme: "CalmTrack",
+        clean: true,
+        configuration: "Release",
+        export_method: "development",
+        export_options: {
+          method: "development",
+          signingStyle: "automatic",
+          teamID: "53353F8EY8"
+        },
+        output_directory: "build/ipa",
+        output_name: "CalmTrack-#{suffix}",
+        xcargs: xcargs
+      )
+    end
+
+    UI.message("打包完成：build/ipa/CalmTrack-#{suffix}.ipa（build ##{build_number}#{version ? ", version #{version}" : ""}；已写回工程 CURRENT_PROJECT_VERSION）")
   end
 
   desc "上传 TestFlight（需先配置 fastlane/.env：API key + match 证书仓库 + match 密码）"

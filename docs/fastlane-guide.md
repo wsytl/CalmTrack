@@ -97,3 +97,24 @@ fastlane ios beta
 - `fastlane/Fastfile` beta lane 内：`REPLACE_WITH_KEY_ID` / `REPLACE_WITH_ISSUER_ID` / `REPLACE_WITH_KEY_FILEPATH`（有 .env 后不会再读到）
 - `fastlane/Matchfile`：`REPLACE_WITH_MATCH_CERTS_REPO_URL`（有 .env 后不会再读到）
 - `fastlane/.env.example`：全部 REPLACE_WITH_*（复制为 .env 后替换）
+
+## 四、脚本一键打包（推荐日常使用）
+
+`scripts/package.sh` 包装了 `fastlane ios package`：指定环境、可选版本号、build 号自动递增。
+
+```bash
+# development 签名打包（默认），build 号自动 +1
+./scripts/package.sh
+
+# 指定版本号（覆盖 MARKETING_VERSION，仅本次生效）
+./scripts/package.sh --version 1.2.0
+
+# App Store 签名打包（需先完成 TestFlight 升级第 1-4 步）
+./scripts/package.sh --env appstore --version 1.2.0
+```
+
+行为：
+- **环境**：`--env development`（默认）→ Development 签名 ipa；`--env appstore` → App Store 签名（需 API key + match 已配置）
+- **版本**：`--version x.y.z` → 本次打包覆盖版本号，不写回工程（工程 MARKETING_VERSION 不变）
+- **build 号**：每次打包自动 +1（`increment_build_number`），**写回工程** `CURRENT_PROJECT_VERSION`——记得随改动一起提交，保证下次继续递增
+- **产物**：`build/ipa/CalmTrack-<env>[-<version>]-<build>.ipa`（如 `CalmTrack-development-1.2.0-3.ipa`）

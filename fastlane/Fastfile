@@ -1,13 +1,13 @@
 # fastlane/Fastfile
-# CalmTrack 自动打包：本机真机 archive+ipa；CI 走 build lane（无签名验证）。
+# CalmTrack 自动打包与分发
+#   ios build      —— CI 模拟器构建验证（无签名）
+#   ios archive    —— 本机真机 Release + Development 签名 ipa（Automatic signing）
+#   ios beta       —— TestFlight 上传（需先在 fastlane/.env 配置 API key 与 match，见 .env.example）
 #
-# 升级路线（接入 TestFlight 后启用）：
-#   lane :beta do
-#     build_app(scheme: "CalmTrack", export_method: "app-store-connect")
-#     upload_to_testflight(skip_waiting_for_build_processing: true)
-#   end
-# 届时建议切换 fastlane match 管理证书，并把 App Store Connect API key 放入
-# GitHub Secrets（APP_STORE_CONNECT_API_KEY_*），CI 即可全自动分发。
+# App Store Connect API Key：
+#   创建：App Store Connect → 用户和访问 → 集成 → App Store Connect API → 生成密钥（.p8）
+#   配置：cp fastlane/.env.example fastlane/.env 后填入真实值（fastlane/.env 已 gitignore）
+#   本文件只读环境变量，不写死密钥；占位值仅在未配置时兜底并导致显式报错。
 
 default_platform(:ios)
 
@@ -50,5 +50,26 @@ platform :ios do
       code_signing: false,
       build_for_testing: true
     )
+  end
+
+  desc "上传 TestFlight（需先配置 fastlane/.env：API key + match 证书仓库 + match 密码）"
+  lane :beta do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] || "REPLACE_WITH_KEY_ID",
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] || "REPLACE_WITH_ISSUER_ID",
+      key_filepath: ENV["APP_STORE_CONNECT_API_KEY_FILEPATH"] || "REPLACE_WITH_KEY_FILEPATH",
+      in_house: false
+    )
+
+    match(type: "appstore", readonly: true)
+
+    build_app(
+      scheme: "CalmTrack",
+      export_method: "app-store-connect",
+      output_directory: "build/ipa",
+      output_name: "CalmTrack"
+    )
+
+    upload_to_testflight(skip_waiting_for_build_processing: true)
   end
 end

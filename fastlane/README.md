@@ -1,46 +1,50 @@
-# fastlane
+fastlane documentation
+----
 
-CalmTrack 的自动打包配置。
+> 完整中文指南（本机打包 / 装到 iPhone / TestFlight 升级）见 **docs/fastlane-guide.md**
 
-## 安装（一次性，本机）
+# Installation
 
-```bash
-brew install fastlane
-# 或使用 Gemfile：
-# bundle install
+Make sure you have the latest version of the Xcode command line tools installed:
+
+```sh
+xcode-select --install
 ```
 
-## 本机真机打包（archive + ipa）
+For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
 
-```bash
-fastlane ios archive
+# Available Actions
+
+## iOS
+
+### ios build
+
+```sh
+[bundle exec] fastlane ios build
 ```
 
-- 产物：`build/ipa/CalmTrack.ipa` + `build/CalmTrack.xcarchive`
-- 签名：Development（Automatic signing，使用钥匙串中的 `Apple Development: tianli yang (6BNWARU22R)`）
-- 前提：Xcode 已登录 Apple 账号（偏好设置 → Accounts），本机有对应证书/描述文件
+模拟器构建验证（CI 用；无需签名）
 
-## CI（GitHub Actions）
+### ios archive
 
-每次 push/PR 自动执行：
-- `fastlane ios build` —— 模拟器无签名构建
-- `fastlane ios test_build` —— 测试 target 编译验证
+```sh
+[bundle exec] fastlane ios archive
+```
 
-## 升级路线：CI 全自动真机打包 / TestFlight
+真机 Release archive 并导出 Development 签名 ipa（本机；Automatic signing）
 
-目前 CI 只做无签名验证（Development 证书在 CI 中不可用）。要 CI 产出真机 ipa 或上传 TestFlight，需要以下**人工步骤**（一次）：
+### ios test_build
 
-1. **导出签名材料**（钥匙串访问 → 右键 `Apple Development: tianli yang` → 导出 .p12，设密码；`xcodebuild -showBuildSettings` 或 Xcode 查看描述文件，导出 `.mobileprovision`）
-2. **放入 GitHub Secrets**（repo Settings → Secrets and variables → Actions）：
-   - `IOS_CERTIFICATE`（p12 base64）
-   - `IOS_CERTIFICATE_PASSWORD`
-   - `IOS_PROVISIONING_PROFILE`（mobileprovision base64）
-3. 在 workflow 中新增签名步骤（解 base64 → 安装到钥匙串/描述文件目录 → `xcodebuild archive`）
-4. 或更推荐：**切换到 fastlane match + App Store Connect API key**（`fastlane match init`），然后启用 Fastfile 中注释的 `beta` lane（TestFlight 上传）。
+```sh
+[bundle exec] fastlane ios test_build
+```
 
-## 环境事实（记录）
+构建并编译测试（CI 用；模拟器，无签名）
 
-- Bundle ID：`com.ytl.CalmTrack`
-- Team ID：`53353F8EY8`
-- 本机证书：Apple Development: tianli yang (6BNWARU22R)
-- App Store Connect API key：暂无（TestFlight 前创建）
+----
+
+This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
+
+More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
+
+The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).

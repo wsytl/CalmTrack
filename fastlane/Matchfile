@@ -1,0 +1,7 @@
+# fastlane/Matchfile
+# 证书仓库：先建一个私有 repo（例如 wsytl/CalmTrack-match-certs），
+# 把 URL 填进 fastlane/.env 的 MATCH_GIT_URL（占位符当前会导致 match 报错——配置后生效）。
+git_url(ENV["MATCH_GIT_URL"] || "REPLACE_WITH_MATCH_CERTS_REPO_URL")
+app_identifier("com.ytl.CalmTrack")
+type("appstore")
+team_id("53353F8EY8")

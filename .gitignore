@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Xcode — 构建产物
+DerivedData/
+build/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+
+# Xcode — 用户状态（xcuserdata 目录按项目约定入库，scheme 已由 xcshareddata 共享）
+*.pbxuser
+*.perspectivev3
+*.xcuserstate

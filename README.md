@@ -26,7 +26,7 @@
 | UI | SwiftUI（iOS 15.6+） |
 | 数据持久化 | Core Data（NSPersistentContainer，自动迁移） |
 | 本地化 | String Catalogs（`Localizable.xcstrings`，简体中文 + 英文） |
-| 第三方依赖 | 无 |
+| 第三方依赖 | 无（运行时）；fastlane（打包/分发）、XCTest（测试） |
 
 - 最低部署目标：**iOS 15.6**（工程级配置 26.4，Target 级为 15.6）
 - Bundle ID：`com.ytl.CalmTrack`
@@ -37,7 +37,7 @@
 ```
 CalmTrack/
 ├── CalmTrackApp.swift              # App 入口：注入持久化容器，启动 Splash 门控
-├── PersistenceController.swift     # Core Data 容器 + 首次启动默认数据种子
+├── PersistenceController.swift     # Core Data 容器 + 首次启动默认数据种子（含 in-memory 预览容器）
 ├── L10n.swift                      # 本地化读取封装（tr / trf）
 ├── LocalizedDateFormat.swift       # 本地化日期格式化
 ├── LaunchScreen.storyboard         # 启动屏
@@ -48,8 +48,8 @@ CalmTrack/
 ├── Services/
 │   ├── DayRecordStore.swift        # 按自然日取/建记录的统一存储入口（含去重）
 │   ├── TemplateCatalog.swift       # 食疗模板唯一数据源（Onboarding / 设置共用）
-│   ├── HabitService.swift          # 打卡读写、进度调整、完成度合并、连续天数
-│   └── MetricService.swift         # 指标记录读写（读路径只读，不创建记录）
+│   ├── HabitService.swift          # 打卡读写、进度、完成度合并、连续天数、窗口聚合（ObservableObject）
+│   └── MetricService.swift         # 指标读写（读路径只读不建；写路径去重）
 ├── Theme/
 │   └── CalmStyle.swift             # 「慢养」配色与按钮反馈（CalmChrome）
 └── Views/
@@ -59,14 +59,22 @@ CalmTrack/
     ├── MarkdownText.swift          # 轻量 Markdown 渲染（AttributedString）
     ├── HabitSummaryStrip.swift     # 完成率环 + 连续天数
     ├── EmptyPlaceholder.swift      # 列表空态占位（分类/习惯/指标管理共用）
-    ├── CalendarView.swift          # 月度日历（含年月选择器）
-    ├── MetricSheetView.swift       # 每日状态滑杆录入
+    ├── CalendarView.swift          # 月度日历（含年月选择器；窗口由纯函数过滤）
+    ├── MetricSheetView.swift       # 每日状态滑杆录入（读不创建、只存触碰项）
     ├── MetricHistoryView.swift     # 指标历史 + 近 7 天趋势
     ├── CategoryManagementView.swift    # 分类管理
     ├── HabitItemManagementView.swift   # 习惯项目管理
     ├── MetricItemManagementView.swift  # 指标项管理
     ├── SettingsView.swift          # 设置（调养目标 / 模板 / 分类 / 习惯 / 指标）
     └── LaunchSplashGate.swift      # 启动过渡层（保证「慢养」可见）
+CalmTrackTests/                     # 单元测试（Unit Test target，7 个 seam，Xcode ⌘U 运行）
+scripts/
+└── package.sh                      # 一键打包脚本（环境/版本/build 递增）
+fastlane/                           # 打包与分发：Fastfile / Matchfile / .env.example
+.github/workflows/                  # CI（ci.yml）+ TestFlight 分发（release.yml，占位）
+docs/
+├── fastlane-guide.md               # 打包与分发完整指南（本机 / ad-hoc / TestFlight）
+└── agents/                         # agent 协作约定（issue tracker / triage / domain）
 ```
 
 ## 数据模型
@@ -86,8 +94,9 @@ Core Data 中共 6 个实体：
 
 - 所有记录以 **自然日 0 点**（`calendarDayStart`）为键存储与查询，避免时区 / 时分秒不一致导致的读取问题。
 - 打卡规则：**只能打卡今天**——未来日期不可打卡，历史日期只读。
-- `HabitRecord.completedIDs` 与 `progressValues`、`MetricRecord.values` 使用 Transformable（NSSecureUnarchiveFromData）存储 UUID 集合 / 字典。
-- 首次启动自动种子默认分类、默认习惯与默认指标（胃口 / 腹胀舒适 / 睡眠 / 精神 / 排便顺畅），并兼容旧版「晨起 / 日间 / 晚间」分类的自动升级。
+- `HabitRecord.completedIDs` 与 `progressValues`、`MetricRecord.values` 使用 Transformable（NSSecureUnarchiveFromData）存储 UUID 集合 / 字典；**视图层只接触类型化值**（`Set<UUID>` / `[UUID: Double]`），编解码在 `HabitService` / `MetricService` 内部。
+- 「一日一记录」不变量在写入路径强制（`DayRecordStore` + 合并去重），模型层未加唯一性约束（避免重迁移）。
+- 首次启动自动种子默认分类、默认习惯与默认指标，并兼容旧版「晨起 / 日间 / 晚间」分类的自动升级。
 
 ## 构建运行
 
@@ -96,6 +105,33 @@ Core Data 中共 6 个实体：
 3. ⌘R 运行。首次启动会展示引导页，选择调养目标与模板后进入主页。
 
 > 无第三方依赖、无需额外配置，Clone 后即可构建。
+
+## 测试
+
+- 单元测试 target：**CalmTrackTests**（host 指向 app），覆盖 7 个 seam（日期窗口聚合、完成率/连续天数、打卡状态解码、指标读写、日记录存储、模板目录、日期归一化）。
+- 运行：Xcode 打开工程 → scheme `CalmTrack` → **⌘U**（或终端 `xcodebuild test -project CalmTrack.xcodeproj -scheme CalmTrack -destination 'platform=iOS Simulator,name=iPhone 17'`）。
+- CI：GitHub Actions（`.github/workflows/ci.yml`）每次 push/PR 自动执行模拟器构建 + 测试编译验证。
+
+## 自动化打包与分发
+
+一键脚本（详见 `docs/fastlane-guide.md`）：
+
+```bash
+./scripts/package.sh                                # development 签名打包，build 号自动 +1
+./scripts/package.sh --version 1.2.0                # 指定版本号（仅本次生效）
+./scripts/package.sh --env appstore --version 1.2.0 # App Store 签名（需先配好 API key + match）
+```
+
+- **产物**：`build/ipa/CalmTrack-<env>[-<version>]-<build>.ipa`
+- **build 号**：每次打包自动 +1 并写回工程 `CURRENT_PROJECT_VERSION`（记得随改动提交）
+- **装到 iPhone**：`xcrun devicectl device install app --device <UDID> build/ipa/CalmTrack-*.ipa`（设备需先登记为开发设备）
+- **TestFlight**：按 `docs/fastlane-guide.md` 第三部分激活（App Store Connect API key + match 证书仓库；`fastlane ios beta` 或 CI 打 tag `v*`）
+
+## 版本管理
+
+- git 仓库：main 分支，GitHub 私有仓库 **wsytl/CalmTrack**（https://github.com/wsytl/CalmTrack）。
+- 每次打包后 build 号递增的工程改动请一并提交，保持递增连续性。
+- 提交粒度：一个逻辑改动一个提交；CI 会在每次 push 自动验证。
 
 ## 本地化
 

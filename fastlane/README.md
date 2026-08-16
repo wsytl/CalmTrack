@@ -39,6 +39,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 构建并编译测试（CI 用；模拟器，无签名）
 
+### ios package
+
+```sh
+[bundle exec] fastlane ios package
+```
+
+打包：env=development|appstore（签名环境）；version 可选（覆盖 MARKETING_VERSION，本次生效）；build 号自动递增并写回工程
+
 ### ios beta
 
 ```sh

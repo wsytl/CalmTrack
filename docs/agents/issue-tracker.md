@@ -1,5 +1,7 @@
 # Issue tracker: Local Markdown
 
+> 现状（2026-08）：代码仓库已托管至 GitHub 私有仓库（wsytl/CalmTrack），但 issue 仍按本文件约定的本地 `.scratch/` markdown 管理。若未来改用 GitHub Issues，请同步更新本文件与 `CLAUDE.md` 的 Issue tracker 节。
+
 Issues and specs for this repo live as markdown files in `.scratch/`.
 
 ## Conventions

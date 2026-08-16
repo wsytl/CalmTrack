@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		3A0000000000000000000009 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2C977EE32FA6220E007E887D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2C977EEA2FA6220E007E887D;
+			remoteInfo = CalmTrack;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		2C977EEB2FA6220E007E887D /* CalmTrack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CalmTrack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A0000000000000000000001 /* CalmTrackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CalmTrackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = CalmTrack;
 			sourceTree = "<group>";
 		};
+		3A0000000000000000000002 /* CalmTrackTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CalmTrackTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2C977EE82FA6220E007E887D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3A0000000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				2C977EED2FA6220E007E887D /* CalmTrack */,
+				3A0000000000000000000002 /* CalmTrackTests */,
 				2C977EEC2FA6220E007E887D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				2C977EEB2FA6220E007E887D /* CalmTrack.app */,
+				3A0000000000000000000001 /* CalmTrackTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 2C977EEB2FA6220E007E887D /* CalmTrack.app */;
 			productType = "com.apple.product-type.application";
 		};
+		3A0000000000000000000004 /* CalmTrackTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3A0000000000000000000005 /* Build configuration list for PBXNativeTarget "CalmTrackTests" */;
+			buildPhases = (
+				3A0000000000000000000006 /* Sources */,
+				3A0000000000000000000003 /* Frameworks */,
+				3A0000000000000000000007 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3A0000000000000000000008 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3A0000000000000000000002 /* CalmTrackTests */,
+			);
+			name = CalmTrackTests;
+			packageProductDependencies = (
+			);
+			productName = CalmTrackTests;
+			productReference = 3A0000000000000000000001 /* CalmTrackTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					2C977EEA2FA6220E007E887D = {
 						CreatedOnToolsVersion = 26.4.1;
+					};
+					3A0000000000000000000004 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = 2C977EEA2FA6220E007E887D;
 					};
 				};
 			};
@@ -101,12 +153,20 @@
 			projectRoot = "";
 			targets = (
 				2C977EEA2FA6220E007E887D /* CalmTrack */,
+				3A0000000000000000000004 /* CalmTrackTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		2C977EE92FA6220E007E887D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3A0000000000000000000007 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -123,7 +183,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3A0000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3A0000000000000000000008 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2C977EEA2FA6220E007E887D /* CalmTrack */;
+			targetProxy = 3A0000000000000000000009 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2C977EF92FA62210007E887D /* Debug */ = {
@@ -315,6 +390,54 @@
 			};
 			name = Release;
 		};
+		3A000000000000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 53353F8EY8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ytl.CalmTrackTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalmTrack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CalmTrack";
+			};
+			name = Debug;
+		};
+		3A000000000000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 53353F8EY8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ytl.CalmTrackTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CalmTrack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CalmTrack";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -332,6 +455,15 @@
 			buildConfigurations = (
 				2C977EFC2FA62210007E887D /* Debug */,
 				2C977EFD2FA62210007E887D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3A0000000000000000000005 /* Build configuration list for PBXNativeTarget "CalmTrackTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3A000000000000000000000A /* Debug */,
+				3A000000000000000000000B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

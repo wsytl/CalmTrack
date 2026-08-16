@@ -114,7 +114,7 @@ Core Data 中共 6 个实体：
 
 ## 自动化打包与分发
 
-一键脚本（详见 `docs/fastlane-guide.md`）：
+一键脚本（详见 `docs/fastlane-guide.md`；发布前对照 **`docs/release-checklist.md`** 清单）：
 
 ```bash
 ./scripts/package.sh                                # development 签名打包，build 号自动 +1

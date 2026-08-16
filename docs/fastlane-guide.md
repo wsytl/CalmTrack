@@ -1,5 +1,7 @@
 # CalmTrack 打包与分发指南
 
+> 发布前逐项对照 **docs/release-checklist.md**（发布清单）。
+
 ## 一、本机真机打包（archive + ipa）
 
 ```bash

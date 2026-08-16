@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install fastlane
+        run: bundle install
+
+      - name: Build (simulator, unsigned)
+        run: |
+          set -o pipefail
+          bundle exec fastlane ios build
+
+      - name: Build tests (compile check)
+        run: |
+          set -o pipefail
+          bundle exec fastlane ios test_build

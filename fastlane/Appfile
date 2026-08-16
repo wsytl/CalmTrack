@@ -1,0 +1,3 @@
+# fastlane/Appfile
+app_identifier "com.ytl.CalmTrack"
+team_id "53353F8EY8"

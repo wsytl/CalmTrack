@@ -2,8 +2,13 @@
 # CalmTrack 自动打包与分发
 #   ios build      —— CI 模拟器构建验证（无签名）
 #   ios archive    —— 本机真机 Release + Development 签名 ipa（Automatic signing）
-#   ios package    —— 脚本打包：--env development|appstore，--version 可选，build 号自动递增（scripts/package.sh 调用）
-#   ios beta       —— TestFlight 上传（需先在 fastlane/.env 配置 API key 与 match，见 .env.example）
+#   ios package    —— 统一打包/分发入口（scripts/package.sh 调用）：
+#                     env=development|appstore（签名环境）
+#                     distribute=none|testflight|appstore（分发目标，需 env=appstore）
+#                     version=可选（覆盖 MARKETING_VERSION，本次生效）；build 号自动递增
+#   ios beta       —— 便捷别名：env=appstore + distribute=testflight
+#   ios appstore   —— 便捷别名：env=appstore + distribute=appstore
+#   ios test_build —— CI 测试编译验证
 #
 # App Store Connect API Key：
 #   创建：App Store Connect → 用户和访问 → 集成 → App Store Connect API → 生成密钥（.p8）
@@ -24,7 +29,7 @@ platform :ios do
     )
   end
 
-  desc "真机 Release archive 并导出 Development 签名 ipa（本机；Automatic signing）"
+  desc "真机 Release archive 并导出 Development 签名 ipa（本机；Automatic signing；旧命令，推荐改用 package）"
   lane :archive do
     gym(
       scheme: "CalmTrack",
@@ -53,19 +58,28 @@ platform :ios do
     )
   end
 
-  desc "打包：env=development|appstore（签名环境）；version 可选（覆盖 MARKETING_VERSION，本次生效）；build 号自动递增并写回工程"
+  desc "统一打包/分发：env=development|appstore；distribute=none|testflight|appstore；version 可选；build 号自动递增"
   lane :package do |options|
     env = (options[:env] || "development").to_s
+    distribute = (options[:distribute] || "none").to_s
     version = options[:version]&.to_s
+
     unless %w[development appstore].include?(env)
       UI.user_error!("env 必须是 development 或 appstore，收到: #{env}")
+    end
+    unless %w[none testflight appstore].include?(distribute)
+      UI.user_error!("distribute 必须是 none/testflight/appstore，收到: #{distribute}")
+    end
+    if distribute != "none" && env != "appstore"
+      UI.user_error!("distribute=#{distribute} 需要 env=appstore（App Store 签名），当前 env=#{env}")
     end
 
     build_number = increment_build_number
     suffix = [env, version, build_number].compact.join("-")
     xcargs = version ? "MARKETING_VERSION=#{version}" : nil
 
-    if env == "appstore"
+    # 分发前需要 App Store Connect 访问（API key + match Distribution 证书）
+    if distribute != "none"
       app_store_connect_api_key(
         key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] || "REPLACE_WITH_KEY_ID",
         issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] || "REPLACE_WITH_ISSUER_ID",
@@ -73,6 +87,9 @@ platform :ios do
         in_house: false
       )
       match(type: "appstore", readonly: true)
+    end
+
+    if env == "appstore"
       build_app(
         scheme: "CalmTrack",
         export_method: "app-store-connect",
@@ -97,27 +114,30 @@ platform :ios do
       )
     end
 
-    UI.message("打包完成：build/ipa/CalmTrack-#{suffix}.ipa（build ##{build_number}#{version ? ", version #{version}" : ""}；已写回工程 CURRENT_PROJECT_VERSION）")
+    case distribute
+    when "testflight"
+      upload_to_testflight(skip_waiting_for_build_processing: true)
+      UI.message("已上传 TestFlight")
+    when "appstore"
+      upload_to_app_store(
+        skip_metadata: true,
+        skip_screenshots: true,
+        skip_app_version_update: true,
+        force: true
+      )
+      UI.message("已上传 App Store Connect（App 信息/合规需在 ASC 手动确认后提交审核）")
+    end
+
+    UI.message("完成：build/ipa/CalmTrack-#{suffix}.ipa（build ##{build_number}#{version ? ", version #{version}" : ""}）")
   end
 
-  desc "上传 TestFlight（需先配置 fastlane/.env：API key + match 证书仓库 + match 密码）"
+  desc "上传 TestFlight（便捷别名：package env=appstore distribute=testflight）"
   lane :beta do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] || "REPLACE_WITH_KEY_ID",
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] || "REPLACE_WITH_ISSUER_ID",
-      key_filepath: ENV["APP_STORE_CONNECT_API_KEY_FILEPATH"] || "REPLACE_WITH_KEY_FILEPATH",
-      in_house: false
-    )
+    package(env: "appstore", distribute: "testflight")
+  end
 
-    match(type: "appstore", readonly: true)
-
-    build_app(
-      scheme: "CalmTrack",
-      export_method: "app-store-connect",
-      output_directory: "build/ipa",
-      output_name: "CalmTrack"
-    )
-
-    upload_to_testflight(skip_waiting_for_build_processing: true)
+  desc "上传 App Store（便捷别名：package env=appstore distribute=appstore）"
+  lane :appstore do
+    package(env: "appstore", distribute: "appstore")
   end
 end

@@ -98,23 +98,52 @@ fastlane ios beta
 - `fastlane/Matchfile`：`REPLACE_WITH_MATCH_CERTS_REPO_URL`（有 .env 后不会再读到）
 - `fastlane/.env.example`：全部 REPLACE_WITH_*（复制为 .env 后替换）
 
-## 四、脚本一键打包（推荐日常使用）
+## 四、脚本一键打包 / 分发（推荐日常使用）
 
-`scripts/package.sh` 包装了 `fastlane ios package`：指定环境、可选版本号、build 号自动递增。
+`scripts/package.sh` 包装 `fastlane ios package`：指定签名环境、分发目标、可选版本号，build 号自动递增。
 
 ```bash
-# development 签名打包（默认），build 号自动 +1
+# development 签名打包（默认），build 号自动 +1，不分发
 ./scripts/package.sh
 
 # 指定版本号（覆盖 MARKETING_VERSION，仅本次生效）
 ./scripts/package.sh --version 1.2.0
 
-# App Store 签名打包（需先完成 TestFlight 升级第 1-4 步）
+# App Store 签名打包（不分发；需 API key + match 已配置）
 ./scripts/package.sh --env appstore --version 1.2.0
+
+# 打包并上传 TestFlight
+./scripts/package.sh --env appstore --distribute testflight --version 1.2.0
+
+# 打包并上传 App Store Connect（App 信息/合规需在 ASC 手动确认后提交审核）
+./scripts/package.sh --env appstore --distribute appstore --version 1.2.0
 ```
 
 行为：
-- **环境**：`--env development`（默认）→ Development 签名 ipa；`--env appstore` → App Store 签名（需 API key + match 已配置）
-- **版本**：`--version x.y.z` → 本次打包覆盖版本号，不写回工程（工程 MARKETING_VERSION 不变）
-- **build 号**：每次打包自动 +1（`increment_build_number`），**写回工程** `CURRENT_PROJECT_VERSION`——记得随改动一起提交，保证下次继续递增
-- **产物**：`build/ipa/CalmTrack-<env>[-<version>]-<build>.ipa`（如 `CalmTrack-development-1.2.0-3.ipa`）
+- **环境** `--env`：`development`（默认）→ Development 签名 ipa（本机安装）；`appstore` → App Store 签名（需 API key + match 已配置）
+- **分发** `--distribute`：`none`（默认，只打包）/ `testflight` / `appstore`——仅 `--env appstore` 时可分发
+- **版本** `--version x.y.z`：本次打包覆盖版本号，不写回工程
+- **build 号**：每次打包自动 +1 并**写回工程** `CURRENT_PROJECT_VERSION`——记得随改动一起提交
+- **产物**：`build/ipa/CalmTrack-<env>[-<version>]-<build>.ipa`
+
+等价命令：`fastlane ios beta` = `--env appstore --distribute testflight`；`fastlane ios appstore` = `--env appstore --distribute appstore`。
+
+## 五、App Store 上架流程
+
+### 前置（首次，浏览器）
+1. **App Store Connect 创建 App 记录**：App Store Connect → 我的 App → + → 平台 iOS、名称 CalmTrack（慢养）、bundle id `com.ytl.CalmTrack`、SKU 任意（如 `calmtrack`）
+2. 补全 App 信息：定价、隐私政策网址、App 隐私（隐私清单）、描述、关键词、截图（6.7"/6.5" 至少一张）、App 图标
+3. 配置好 `fastlane/.env`（API key + match，见第三部分）
+
+### 上传
+```bash
+./scripts/package.sh --env appstore --distribute appstore --version 1.2.0
+# 或：fastlane ios appstore
+```
+
+上传成功后，到 App Store Connect → 对应版本页：确认合规问题 → 点「添加以供审核」→ 提交审核。
+
+### 注意
+- `upload_to_app_store` 跳过元数据/截图/版本更新（`skip_*: true`），只传二进制——元数据在 ASC 网页维护即可
+- 首次上架前的《App Store Connect 协议/税务/银行》需先在网页完成
+- 提交审核后等待 Apple 审核；TestFlight 可作为预发布给测试员先行验证

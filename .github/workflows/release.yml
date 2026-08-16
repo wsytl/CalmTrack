@@ -1,12 +1,21 @@
-name: Release TestFlight
+name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: '分发目标'
+        required: true
+        default: 'testflight'
+        type: choice
+        options:
+          - testflight
+          - appstore
   push:
     tags: ["v*"]
 
 jobs:
-  testflight:
+  release:
     runs-on: macos-15
     steps:
       - name: Checkout
@@ -29,8 +38,9 @@ jobs:
           mkdir -p ~/.fastlane
           echo "$KEY_CONTENT" | base64 --decode > ~/.fastlane/AuthKey_${KEY_ID}.p8
 
-      - name: Upload to TestFlight
+      - name: Build and distribute
         env:
+          TARGET: ${{ github.event.inputs.target || 'testflight' }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_FILEPATH: ~/.fastlane/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}.p8
@@ -39,4 +49,4 @@ jobs:
           MATCH_READONLY: "true"
         run: |
           set -o pipefail
-          bundle exec fastlane ios beta
+          bundle exec fastlane ios package env:appstore distribute:"$TARGET"
